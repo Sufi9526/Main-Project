@@ -53,7 +53,7 @@ export const forgotPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "ഈ ഇമെയിലിൽ യൂസർ നിലവിലില്ല" });
+      return res.status(404).json({ message: "No User Exists With This Email" });
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
@@ -75,39 +75,34 @@ export const forgotPassword = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Password Reset Request",
-      html: `<h4>പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യാൻ താഴെ കാണുന്ന ലിങ്കിൽ ക്ലിക്ക് ചെയ്യുക:</h4>
+      html: `<h4>Click The Link Below To Reset Your Password:</h4>
              <a href="${resetUrl}">${resetUrl}</a>
-             <p>ഈ ലിങ്ക് 10 മിനിറ്റ് കഴിഞ്ഞ് കാലാവധി തീരുന്നതാണ്.</p>`,
+             <p>This Link Will Expire After 10 Minutes</p>`,
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "റീസെറ്റ് ലിങ്ക് ഇമെയിൽ അയച്ചിട്ടുണ്ട്" });
+    res.status(200).json({ message: "The Reset Link Has Been Sent To Your Email" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// --- പുതുതായി ചേർക്കുന്ന Step 3: Reset Password Function ---
 
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
-
-    // 1. ടോക്കൺ വാലിഡ് ആണോ എന്ന് പരിശോധിക്കുന്നു
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // കാലാവധി കഴിഞ്ഞിട്ടില്ലെന്ന് ഉറപ്പാക്കുന്നു
+      resetPasswordExpires: { $gt: Date.now() }, 
     });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
     }
 
-    // 2. പുതിയ പാസ്‌വേഡ് ഹാഷ് ചെയ്യുന്നു
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. പാസ്‌വേഡ് അപ്ഡേറ്റ് ചെയ്യുന്നു
     user.password = hashedPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;

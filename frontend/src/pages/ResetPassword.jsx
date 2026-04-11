@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
-// നിങ്ങളുടെ Backend URL ശ്രദ്ധിക്കുക
+
 const API_URL = "http://localhost:5000/api/auth";
 
 export default function ResetPassword() {
-  const { token } = useParams(); // URL-ൽ നിന്നുള്ള രഹസ്യ ടോക്കൺ എടുക്കുന്നു
+  const { token } = useParams(); 
   const navigate = useNavigate();
   
   const [password, setPassword] = useState('');
@@ -17,7 +17,7 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // പാസ്‌വേഡുകൾ മാച്ച് ചെയ്യുന്നുണ്ടോ എന്ന് നോക്കുന്നു
+    
     if (password !== confirmPassword) {
       return setMessage("Error: Passwords do not match!");
     }
@@ -26,12 +26,12 @@ export default function ResetPassword() {
     setMessage('');
 
     try {
-      // ബാക്ക് എൻഡിലെ reset-password/:token റൂട്ടിലേക്ക് പുതിയ പാസ്‌വേഡ് അയക്കുന്നു
+      
       const res = await axios.post(`${API_URL}/reset-password/${token}`, { password });
       
       setMessage(res.data.message);
       
-      // പാസ്‌വേഡ് മാറിക്കഴിഞ്ഞാൽ 2 സെക്കൻഡ് കഴിഞ്ഞ് ലോഗിൻ പേജിലേക്ക് വിടുന്നു
+      
       setTimeout(() => {
         navigate("/auth?mode=signin");
       }, 2000);
@@ -49,7 +49,7 @@ export default function ResetPassword() {
         
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-blue-600">Set New Password</h2>
-          <p className="text-gray-500 text-sm">നിങ്ങളുടെ പുതിയ പാസ്‌വേഡ് താഴെ നൽകുക</p>
+          <p className="text-gray-500 text-sm">Enter Your New Password Below</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">

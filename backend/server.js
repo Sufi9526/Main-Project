@@ -7,7 +7,7 @@ import travelRoutes from './routes/travel.js';
 import touristPlacesRoutes from './routes/touristPlaces.js';
 import hotelsRoutes from './routes/hotels.js';
 import itineraryRoutes from './routes/itinerary.js';
-import authRoutes from "./routes/authRoutes.js"; // ✅ FIXED (import instead of require)
+import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contact.js";
 
 dotenv.config();
@@ -18,8 +18,29 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB();
 
+/* ================= CORS SETUP ================= */
+const allowedOrigins = [
+  "http://localhost:5173", // local frontend
+  "https://main-project-frontend.vercel.app" // ⚠️ CHANGE this to your real Vercel URL
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (Postman / mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+/* ============================================== */
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

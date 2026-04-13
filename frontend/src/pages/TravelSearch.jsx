@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-// import './TravelSearch.css';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const TravelSearch = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const TravelSearch = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/travel/search', {
+      const response = await axios.post(`${BASE_URL}/api/travel/search`, {
         date: formData.date,
         time: formData.time,
         fromLocation: formData.fromLocation,

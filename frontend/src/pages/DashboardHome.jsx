@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Map, Bookmark, PlusCircle, Compass } from "lucide-react";
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function DashboardHome() {
   const [user, setUser] = useState(null);
@@ -24,7 +25,7 @@ export default function DashboardHome() {
           const userId = currentUser._id || currentUser.id || currentUser.uid;
           
           if (userId) {
-            const res = await axios.get(`/api/itinerary/saved/${userId}`);
+            const res = await axios.get(`${BASE_URL}/api/itinerary/saved/${userId}`);
             setSavedTripsCount(res.data.length);
           }
         }

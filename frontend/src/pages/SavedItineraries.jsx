@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ItineraryDisplay from "../components/ItineraryDisplay";
 import { Trash2 } from "lucide-react";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const SavedItineraries = () => {
     const [itineraries, setItineraries] = useState([]);
@@ -44,7 +45,7 @@ const SavedItineraries = () => {
                 return;
             }
 
-            const response = await axios.get(`http://localhost:5000/api/itinerary/saved/${userId}`);
+            const response = await axios.get(`${BASE_URL}/api/itinerary/saved/${userId}`);
             setItineraries(response.data);
         } catch (err) {
             console.error(err);
@@ -60,7 +61,7 @@ const SavedItineraries = () => {
 
         setDeletingId(id);
         try {
-            await axios.delete(`http://localhost:5000/api/itinerary/${id}`);
+            await axios.delete(`${BASE_URL}/api/itinerary/${id}`);
             // Remove from local state
             setItineraries(prev => prev.filter(it => it._id !== id));
             if (expandedId === id) setExpandedId(null);

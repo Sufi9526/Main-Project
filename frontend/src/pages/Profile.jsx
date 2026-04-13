@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User, Mail, Calendar, Lock, Settings } from "lucide-react";
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
     const [user, setUser] = useState(null);
@@ -47,7 +48,7 @@ export default function Profile() {
         setPasswordLoading(true);
 
         try {
-            const res = await axios.post("http://localhost:5000/api/auth/update-password", {
+            const res = await axios.post(`${API_URL}/update-password`, {
                 email: user.email,
                 currentPassword,
                 newPassword,

@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ItineraryDisplay from "../components/ItineraryDisplay";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const TouristPlaces = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const TouristPlaces = () => {
   const fetchTouristPlaces = async (location) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/tourist-places/${location}`);
+      const response = await axios.get(`${BASE_URL}/api/tourist-places/${location}`);
       setTouristPlaces(response.data);
       // Pre-select all by default
       setSelectedPlaceIds(response.data.map(place => place._id));
@@ -67,7 +68,7 @@ const TouristPlaces = () => {
     try {
       const arrivalTime = travelData.selectedOption?.arrivalTime || "09:00";
 
-      const response = await axios.post("/api/itinerary/generate", {
+      const response = await axios.post(`${BASE_URL}/api/itinerary/generate`, {
         location: travelData.toLocation,
         startTime: arrivalTime,
         numberOfDays: travelData.numberOfDays,
@@ -233,4 +234,4 @@ const TouristPlaces = () => {
   );
 };
 
-export default TouristPlaces;
+export default TouristPlaces;  

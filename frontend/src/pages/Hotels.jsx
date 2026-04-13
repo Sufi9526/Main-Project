@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ItineraryDisplay from "../components/ItineraryDisplay";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const Hotels = () => {
 
   const fetchHotels = async (location) => {
     try {
-      const response = await axios.get(`/api/hotels/${location}`);
+      const response = await axios.get(`${BASE_URL}/api/hotels/${location}`);
       setHotels(response.data);
     } catch (err) {
       setError("Failed to load hotels");
@@ -78,8 +79,7 @@ const Hotels = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        "/api/itinerary/generate-from-hotel",
+      const response = await axios.post(`${BASE_URL}/api/itinerary/generate-from-hotel`, 
         {
           hotelId: selectedHotel._id,
           checkInTime,

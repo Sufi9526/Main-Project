@@ -8,6 +8,7 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post("http://localhost:5000/api/contact/send", formData);
+      await axios.post(`${BASE_URL.replace("/api/auth", "")}/api/contact/send`, formData);
       toast.success("Thank you for your message! We will get back to you soon.");
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {

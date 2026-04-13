@@ -3,8 +3,8 @@ import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../firebase";
-
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = "http://localhost:5000/api/auth";
 
 const supabase = {
   auth: {
@@ -29,7 +29,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
 
   const [isSigningIn, setIsSigningIn] = useState(true);
-  const [isForgotPassword, setIsForgotPassword] = useState(false); // ✅ പുതിയ സ്റ്റേറ്റ്
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -57,7 +57,7 @@ export default function Auth() {
     }
   };
 
-  // ✅ Forgot Password മാത്രം ഹാൻഡിൽ ചെയ്യാനുള്ള ഫംഗ്ഷൻ
+  
   const handleForgotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -75,7 +75,7 @@ export default function Auth() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Forgot Password മോഡിൽ ആണെങ്കിൽ handleForgotSubmit പ്രവർത്തിപ്പിക്കുക
+    
     if (isForgotPassword) {
       return handleForgotSubmit(e);
     }
@@ -134,8 +134,6 @@ export default function Auth() {
             Welcome to your travel planning platform
           </p>
         </div>
-
-        {/* ✅ Forgot Password അല്ലാത്തപ്പോൾ മാത്രം മെനു കാണിക്കുക */}
         {!isForgotPassword && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-center">Authentication</h2>
@@ -177,8 +175,6 @@ export default function Auth() {
         {isForgotPassword && (
           <h2 className="text-xl font-semibold text-center">Reset Your Password</h2>
         )}
-
-        {/* ✅ Forgot Password മോഡിൽ Google Login കാണിക്കില്ല */}
         {!isForgotPassword && (
           <button
             onClick={handleGoogleLogin}
@@ -222,7 +218,7 @@ export default function Auth() {
             />
           </div>
 
-          {/* ✅ Forgot Password മോഡിൽ പാസ്‌വേഡ് ഇൻപുട്ട് കാണിക്കില്ല */}
+          
           {!isForgotPassword && (
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -264,8 +260,6 @@ export default function Auth() {
                   ? 'Sign In'
                   : 'Create Account'}
           </button>
-
-          {/* ✅ തിരികെ ലോഗിൻ പേജിലേക്ക് പോകാൻ */}
           {isForgotPassword && (
             <button
               type="button"

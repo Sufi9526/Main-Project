@@ -63,7 +63,7 @@ export default function Auth() {
     setLoading(true);
     setMessage('');
     try {
-      const res = await axios.post(`${API_URL}/forgot-password`, { email });
+      await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
       setMessage(res.data.message);
     } catch (error) {
       setMessage(error.response?.data?.message || "Error sending reset link");
@@ -91,7 +91,7 @@ export default function Auth() {
         if (error) throw error;
 
         if (data.session) {
-          const res = await axios.post(`${API_URL}/login`, { email, password });
+          const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
           localStorage.setItem("token", res.data.token);
           if (res.data.user) {
             localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -104,7 +104,7 @@ export default function Auth() {
         }
       } else {
         await supabase.auth.signUp({ email, password });
-        await axios.post(`${API_URL}/signup`, { fullName, email, password });
+        await axios.post(`${API_URL}/api/auth/signup`, { fullName, email, password });
 
         setMessage('Sign Up Successful! Redirecting to Sign In...');
         setTimeout(() => {
@@ -280,4 +280,4 @@ export default function Auth() {
       </div>
     </div>
   );
-}
+}   

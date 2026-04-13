@@ -7,7 +7,6 @@ import DestinationOptions from "./pages/DestinationOptions";
 import Home from "./pages/Home";
 import Hotels from "./pages/Hotels";
 import TouristPlaces from "./pages/TouristPlaces";
-import TravelOptions from "./pages/TravelOptions";
 import TravelSearch from "./pages/TravelSearch";
 import ResetPassword from "./pages/ResetPassword"
 import SavedItineraries from "./pages/SavedItineraries";
@@ -39,7 +38,6 @@ function App() {
         <Route path="destination-options" element={<DestinationOptions />} />
         <Route path="tourist-places" element={<TouristPlaces />} />
         <Route path="hotels" element={<Hotels />} />
-        <Route path="traveloptions" element={<TravelOptions />} />
         <Route path="saved-itineraries" element={<SavedItineraries />} />
         <Route path="profile" element={<Profile />} />
 

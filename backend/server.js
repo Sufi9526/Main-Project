@@ -20,13 +20,12 @@ connectDB();
 
 /* ================= CORS SETUP ================= */
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend
-  "https://main-project-4b3u.vercel.app" // ⚠️ CHANGE this to your real Vercel URL
+  "http://localhost:5173",
+  "https://main-project-4b3u.vercel.app"
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (Postman / mobile apps)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -35,9 +34,13 @@ app.use(cors({
       return callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+// ✅ Handle preflight (VERY IMPORTANT)
+app.options("*", cors());
 /* ============================================== */
 
 // Middleware

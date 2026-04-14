@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = process.env.VITE_API_URL;
 
 // --- Register User (No Changes) ---
 export const registerUser = async (req, res) => {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = false }) => {
   const [saving, setSaving] = useState(false);
@@ -39,7 +40,7 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
         return;
       }
 
-      await axios.post("http://localhost:5000/api/itinerary/save", {
+      await axios.post(`${BASE_URL}/api/itinerary/save`, {
         userId,
         // When using hotel, destination location might be in hotel.location or travelData
         destination: itinerary.location || (itinerary.hotel && itinerary.hotel.location) || "Custom Destination",

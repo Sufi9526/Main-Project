@@ -21,7 +21,7 @@ connectDB();
 /* ================= CORS SETUP ================= */
 const allowedOrigins = [
   "http://localhost:5173", // local frontend
-  "https://main-project-frontend.vercel.app" // ⚠️ CHANGE this to your real Vercel URL
+  "https://main-project-4b3u.vercel.app" // ⚠️ CHANGE this to your real Vercel URL
 ];
 
 app.use(cors({

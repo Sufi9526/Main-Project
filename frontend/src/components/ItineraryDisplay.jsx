@@ -55,6 +55,7 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
     } catch (err) {
       console.error(err);
       setError("Failed to save itinerary.");
+      console.log(error);
     } finally {
       setSaving(false);
     }

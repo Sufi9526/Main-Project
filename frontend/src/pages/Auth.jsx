@@ -66,7 +66,8 @@ export default function Auth() {
       await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
       setMessage(res.data.message);
     } catch (error) {
-      setMessage(error.response?.data?.message );
+      setMessage(error.response?.data?.message || "Error sending reset link]");
+      console.log(error);
     } finally {
       setLoading(false);
     }

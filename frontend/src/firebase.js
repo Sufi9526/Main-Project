@@ -6,7 +6,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDgTP6vW55Cesm8H1PhSG1_1U9RfUeYn1U",
-  authDomain: "main-project-4b3u.vercel.app",
+  authDomain: "travel-planner-d00fb.firebaseapp.com",
   projectId: "travel-planner-d00fb",
   storageBucket: "travel-planner-d00fb.firebasestorage.app",
   messagingSenderId: "532759461513",

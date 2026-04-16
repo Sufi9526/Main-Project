@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-const BASE_URL = process.env.VITE_API_URL;
+const BASE_URL = process.env.FRONTEND_URL;
 
 // --- Register User (No Changes) ---
 export const registerUser = async (req, res) => {
@@ -71,7 +71,8 @@ export const forgotPassword = async (req, res) => {
     });
 
     // const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
-    const resetUrl = `${BASE_URL}/reset-password/${resetToken}`;
+    const resetUrl = `https://main-project-4b3u.vercel.app/reset-password/${resetToken}`;
+    
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -84,7 +85,7 @@ export const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "The Reset Link Has Been Sent To Your Email" });
-    console.log(Error);
+    // console.log(Error);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

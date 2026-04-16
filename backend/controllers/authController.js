@@ -71,7 +71,7 @@ export const forgotPassword = async (req, res) => {
     });
 
     // const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
-    const resetUrl = `https://main-project-4b3u.vercel.app/reset-password/${resetToken}`;
+    const resetUrl = `${BASE_URL}/reset-password/${resetToken}`;
     
 
     const mailOptions = {

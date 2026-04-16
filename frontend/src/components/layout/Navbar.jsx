@@ -99,7 +99,6 @@ const Navbar = ({ currentPage }) => {
             {/* NAV LINKS */}
             <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-6 text-sm">
               <NavLink to="">Home</NavLink>
-              <NavLink to="traveloptions">Travel Options</NavLink>
 
               {/* 🔐 Only when logged in */}
         

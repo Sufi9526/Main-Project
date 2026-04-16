@@ -84,6 +84,7 @@ export const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "The Reset Link Has Been Sent To Your Email" });
+    console.log(Error);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

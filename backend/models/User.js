@@ -15,7 +15,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // --- Forgot Password-ന് വേണ്ടി പുതുതായി ചേർക്കുന്നത് ---
     resetPasswordToken: {
       type: String,
       default: undefined,

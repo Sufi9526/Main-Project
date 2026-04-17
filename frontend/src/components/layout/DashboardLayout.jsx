@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Menu, // 🔥 ADD
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
@@ -46,6 +47,15 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-screen flex bg-background">
+      
+      {/* 🔥 MOBILE TOP BAR (NEW) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center justify-between px-4 z-50">
+        <button onClick={() => setIsMobileOpen(true)}>
+          <Menu className="w-6 h-6" />
+        </button>
+        <span className="font-semibold">Dashboard</span>
+      </div>
+
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
@@ -95,7 +105,6 @@ export function DashboardLayout() {
 
         {/* Sidebar Footer */}
         <div className={cn("p-4 border-t border-sidebar-border flex flex-col gap-4", isCollapsed && "items-center")}>
-          {/* User Profile Section */}
           {user && (
             <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
               {user.photoURL ? (
@@ -121,11 +130,6 @@ export function DashboardLayout() {
           <Button
             variant="ghost"
             className={cn("w-full text-sidebar-foreground/70 hover:text-red-600 hover:bg-red-50", isCollapsed ? "justify-center px-0" : "justify-start")}
-            onClick={() => {
-              // Optional: Clear storage on explicitly clicking logout
-              // localStorage.removeItem("user");
-              // localStorage.removeItem("token");
-            }}
             asChild
           >
             <Link to="/">
@@ -146,9 +150,9 @@ export function DashboardLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        
+        {/* 🔥 ADD PADDING FOR MOBILE TOP BAR */}
+        <main className="flex-1 p-4 lg:p-8 overflow-y-auto mt-16 lg:mt-0">
           <Outlet />
         </main>
       </div>

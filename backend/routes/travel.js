@@ -19,18 +19,40 @@ router.post('/search', async (req, res) => {
     }
     const dayOfWeek = parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
-    const modeFilter = mode === 'all' ? { $in: ['bus', 'train'] } : mode;
+    let travelOptions = [];
+    if (mode === 'all') {
+      // In "all" mode, fetch both train and bus day-wise plans.
+      const [busOptions, trainOptions] = await Promise.all([
+        TravelOption.find({
+          dayOfWeek: dayOfWeek,
+          fromLocation: fromLocation,
+          toLocation: toLocation,
+          mode: 'bus',
+          departureTime: { $gt: time },
+        }).sort({ departureTime: 1 }).limit(3),
+        TravelOption.find({
+          dayOfWeek: dayOfWeek,
+          fromLocation: fromLocation,
+          toLocation: toLocation,
+          mode: 'train',
+          departureTime: { $gt: time },
+        }).sort({ departureTime: 1 }).limit(3),
+      ]);
 
-    // Build plans by weekday derived from the entered date.
-    const travelOptions = await TravelOption.find({
-      dayOfWeek: dayOfWeek,
-      fromLocation: fromLocation,
-      toLocation: toLocation,
-      mode: modeFilter,
-      departureTime: { $gt: time },
-    })
-      .sort({ departureTime: 1 })
-      .limit(3);
+      travelOptions = [...busOptions, ...trainOptions]
+        .sort((a, b) => a.departureTime.localeCompare(b.departureTime))
+        .slice(0, 6);
+    } else {
+      travelOptions = await TravelOption.find({
+        dayOfWeek: dayOfWeek,
+        fromLocation: fromLocation,
+        toLocation: toLocation,
+        mode: mode,
+        departureTime: { $gt: time },
+      })
+        .sort({ departureTime: 1 })
+        .limit(3);
+    }
 
     res.json(travelOptions);
   } catch (error) {

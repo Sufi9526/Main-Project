@@ -51,10 +51,8 @@ const TravelSearch = () => {
 
       setTravelOptions(response.data);
       setSearchPerformed(true);
-
-      if (response.data.length === 0) {
-        setError('No travel options found for the selected criteria. Please try different search terms.');
-      }
+      setError('');
+      
     } catch (err) {
       setError('Failed to search travel options. Please try again.');
       console.error('Search error:', err);

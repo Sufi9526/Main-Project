@@ -16,46 +16,43 @@ const SavedItineraries = () => {
         fetchSavedItineraries();
     }, []);
 
-    // 🔥 GET USER FROM LOCAL STORAGE
-    const getUser = () => {
+    // ✅ SAFE USER GET (FIXED)
+    const getUserData = () => {
         try {
             const userStr = localStorage.getItem("user");
             if (!userStr) return null;
-            return JSON.parse(userStr);
+
+            const user = JSON.parse(userStr);
+
+            return {
+                userId: user.uid || user._id || user.id || null,
+                email: user.email || null
+            };
         } catch (e) {
             console.error("User parse error");
             return null;
         }
     };
 
-    // 🔥 SUPPORT BOTH LOGIN TYPES
-    const getUserId = () => {
-        const user = getUser();
-        if (!user) return null;
-        return user.uid || user._id || null;
-    };
-
-    // 🔥 FIXED FETCH FUNCTION
+    // ✅ FETCH FIXED
     const fetchSavedItineraries = async () => {
         try {
-            const user = getUser();
-            const userId = getUserId();
+            const userData = getUserData();
 
-            if (!user || !userId) {
+            console.log("USER DATA:", userData); // 🔍 DEBUG
+
+            if (!userData || !userData.userId || !userData.email) {
                 setError("Please login to see your saved itineraries");
                 setLoading(false);
                 return;
             }
 
-            console.log("Fetching:", userId, user.email);
-
-            // ✅ NEW API CALL (IMPORTANT FIX)
             const response = await axios.get(
                 `${BASE_URL}/api/itinerary/saved`,
                 {
                     params: {
-                        userId,
-                        email: user.email
+                        userId: userData.userId,
+                        email: userData.email
                     }
                 }
             );

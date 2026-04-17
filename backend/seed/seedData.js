@@ -24,6 +24,19 @@ const travelOptions = [
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '07:00', arrivalTime: '18:30', travelDuration: '11h 30m', date: '2025-11-10', operatorName: 'Konkan Kanya Express', availableSeats: 50, price: 800 },
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '11:00', arrivalTime: '22:00', travelDuration: '11h', date: '2025-11-10', operatorName: 'Mandovi Express', availableSeats: 45, price: 750 },
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '16:30', arrivalTime: '04:00', travelDuration: '11h 30m', date: '2025-11-10', operatorName: 'Jan Shatabdi', availableSeats: 60, price: 900 },
+
+  // Mumbai to Goa (weekday-specific premium plans)
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '09:00', arrivalTime: '19:20', travelDuration: '10h 20m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Western Horizon Express', availableSeats: 42, price: 1450 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '10:30', arrivalTime: '21:00', travelDuration: '10h 30m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Speed Rider', availableSeats: 31, price: 1180 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '13:15', arrivalTime: '23:40', travelDuration: '10h 25m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Coastal Premier Rail', availableSeats: 36, price: 1390 },
+
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '09:20', arrivalTime: '19:35', travelDuration: '10h 15m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Velocity Luxe Lines', availableSeats: 28, price: 1240 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '11:10', arrivalTime: '21:20', travelDuration: '10h 10m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Arabian Coast Elite', availableSeats: 46, price: 1490 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '15:40', arrivalTime: '01:50', travelDuration: '10h 10m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Blue Dune Transit', availableSeats: 33, price: 1120 },
+
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '08:50', arrivalTime: '19:05', travelDuration: '10h 15m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Sunset Vista Express', availableSeats: 39, price: 1410 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '12:05', arrivalTime: '22:30', travelDuration: '10h 25m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Aurora Intercity', availableSeats: 27, price: 1200 },
+  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '17:10', arrivalTime: '03:25', travelDuration: '10h 15m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Konkan Platinum Runner', availableSeats: 44, price: 1520 },
   
   // Delhi to Agra
   { fromLocation: 'Delhi', toLocation: 'Agra', mode: 'bus', departureTime: '06:00', arrivalTime: '09:30', travelDuration: '3h 30m', date: '2025-11-10', operatorName: 'UP Roadways', availableSeats: 35, price: 400 },

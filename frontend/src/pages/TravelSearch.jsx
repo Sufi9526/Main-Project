@@ -11,7 +11,7 @@ const TravelSearch = () => {
     time: '',
     fromLocation: '',
     toLocation: '',
-    mode: 'bus',
+    mode: 'all',
     numberOfDays: '',
   });
   const [travelOptions, setTravelOptions] = useState([]);
@@ -139,6 +139,7 @@ const TravelSearch = () => {
             <select
               className="p-3 border-2 border-gray-400 rounded-lg text-base bg-white text-black transition-all duration-300 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-white"
               id="mode" name="mode" value={formData.mode} onChange={handleChange} required>
+              <option value="all">All (Bus + Train)</option>
               <option value="bus">Bus</option>
               <option value="train">Train</option>
             </select>

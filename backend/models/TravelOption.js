@@ -30,6 +30,10 @@ const travelOptionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  dayOfWeek: {
+    type: String,
+    enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  },
   operatorName: {
     type: String,
     required: true,

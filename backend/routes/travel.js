@@ -13,16 +13,35 @@ router.post('/search', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Find travel options that match criteria and departure time is after entered time
-    const travelOptions = await TravelOption.find({
+    const parsedDate = new Date(date);
+    const dayOfWeek = !Number.isNaN(parsedDate.getTime())
+      ? parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+      : null;
+
+    const modeFilter = mode === 'all' ? { $in: ['bus', 'train'] } : mode;
+
+    // Prefer an exact date match; fallback to weekday plans for recurring schedules.
+    let travelOptions = await TravelOption.find({
       date: date,
       fromLocation: fromLocation,
       toLocation: toLocation,
-      mode: mode,
-      departureTime: { $gt: time }, // Only show options after entered time
+      mode: modeFilter,
+      departureTime: { $gt: time },
     })
-      .sort({ departureTime: 1 }) // Sort by departure time
-      .limit(3); // Return only 3 options
+      .sort({ departureTime: 1 })
+      .limit(3);
+
+    if (travelOptions.length === 0 && dayOfWeek) {
+      travelOptions = await TravelOption.find({
+        dayOfWeek: dayOfWeek,
+        fromLocation: fromLocation,
+        toLocation: toLocation,
+        mode: modeFilter,
+        departureTime: { $gt: time },
+      })
+        .sort({ departureTime: 1 })
+        .limit(3);
+    }
 
     res.json(travelOptions);
   } catch (error) {

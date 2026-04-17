@@ -6,6 +6,90 @@ import Hotel from '../models/Hotel.js';
 
 dotenv.config();
 
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const travelOnlyMode = process.argv.includes('--travel-only');
+
+const getDayFromDateString = (dateString) => {
+  const dateObj = new Date(`${dateString}T00:00:00Z`);
+  if (Number.isNaN(dateObj.getTime())) return null;
+  return DAYS_OF_WEEK[dateObj.getUTCDay()];
+};
+
+const shiftTimeByMinutes = (timeString, minutesToShift) => {
+  const [hoursStr, minutesStr] = String(timeString).split(':');
+  const hours = Number(hoursStr);
+  const minutes = Number(minutesStr);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return timeString;
+  }
+
+  const totalMinutes = ((hours * 60 + minutes + minutesToShift) % (24 * 60) + (24 * 60)) % (24 * 60);
+  const shiftedHours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const shiftedMinutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${shiftedHours}:${shiftedMinutes}`;
+};
+
+const createWeeklyTravelOptions = (baseOptions) => {
+  const TRAIN_NAMES = [
+    'Western Horizon Express',
+    'Silver Line Express',
+    'Ocean Breeze Express',
+    'Mountain King Express',
+    'Sapphire Express',
+    'Golden Arrow Express',
+    'Valley Runner Express',
+    'Emerald Coast Express',
+    'Blue Wave Express',
+    'Night Star Express',
+    'Rapid Link Express',
+    'Thunder Rail Express',
+    'Crystal Line Express',
+    'Sunset Express',
+    'Royal Track Express',
+  ];
+
+  const BUS_NAMES = [
+    'Speed Rider',
+    'Urban Glide',
+    'Express Wheels',
+    'Highway King',
+    'City Sprinter',
+    'Rapid Move',
+    'Smart Ride',
+    'Turbo Travels',
+    'Elite Journey',
+    'Swift Wheels',
+    'Comfort Line',
+    'Prime Travels',
+    'Zoom Rider',
+    'Easy Move',
+    'Star Travels',
+  ];
+
+  return DAYS_OF_WEEK.flatMap((day, dayIndex) => {
+    const minuteShift = dayIndex * 10;
+    const seatAdjustment = dayIndex % 3;
+    const priceAdjustment = dayIndex * 20;
+
+    return baseOptions.map((option, optionIndex) => {
+      const namePool = option.mode === 'train' ? TRAIN_NAMES : BUS_NAMES;
+      const nameIndex = (dayIndex * 3 + optionIndex) % namePool.length;
+      const selectedOperator = namePool[nameIndex];
+
+      return {
+        ...option,
+        day,
+        departureTime: shiftTimeByMinutes(option.departureTime, minuteShift),
+        arrivalTime: shiftTimeByMinutes(option.arrivalTime, minuteShift),
+        availableSeats: Math.max(5, option.availableSeats - seatAdjustment),
+        price: option.price + priceAdjustment,
+        operatorName: selectedOperator,
+      };
+    });
+  });
+};
+
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
@@ -24,19 +108,6 @@ const travelOptions = [
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '07:00', arrivalTime: '18:30', travelDuration: '11h 30m', date: '2025-11-10', operatorName: 'Konkan Kanya Express', availableSeats: 50, price: 800 },
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '11:00', arrivalTime: '22:00', travelDuration: '11h', date: '2025-11-10', operatorName: 'Mandovi Express', availableSeats: 45, price: 750 },
   { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '16:30', arrivalTime: '04:00', travelDuration: '11h 30m', date: '2025-11-10', operatorName: 'Jan Shatabdi', availableSeats: 60, price: 900 },
-
-  // Mumbai to Goa (weekday-specific premium plans)
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '09:00', arrivalTime: '19:20', travelDuration: '10h 20m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Western Horizon Express', availableSeats: 42, price: 1450 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '10:30', arrivalTime: '21:00', travelDuration: '10h 30m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Speed Rider', availableSeats: 31, price: 1180 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '13:15', arrivalTime: '23:40', travelDuration: '10h 25m', date: '2026-04-20', dayOfWeek: 'Monday', operatorName: 'Coastal Premier Rail', availableSeats: 36, price: 1390 },
-
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '09:20', arrivalTime: '19:35', travelDuration: '10h 15m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Velocity Luxe Lines', availableSeats: 28, price: 1240 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '11:10', arrivalTime: '21:20', travelDuration: '10h 10m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Arabian Coast Elite', availableSeats: 46, price: 1490 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '15:40', arrivalTime: '01:50', travelDuration: '10h 10m', date: '2026-04-21', dayOfWeek: 'Tuesday', operatorName: 'Blue Dune Transit', availableSeats: 33, price: 1120 },
-
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '08:50', arrivalTime: '19:05', travelDuration: '10h 15m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Sunset Vista Express', availableSeats: 39, price: 1410 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'bus', departureTime: '12:05', arrivalTime: '22:30', travelDuration: '10h 25m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Aurora Intercity', availableSeats: 27, price: 1200 },
-  { fromLocation: 'Mumbai', toLocation: 'Goa', mode: 'train', departureTime: '17:10', arrivalTime: '03:25', travelDuration: '10h 15m', date: '2026-04-22', dayOfWeek: 'Wednesday', operatorName: 'Konkan Platinum Runner', availableSeats: 44, price: 1520 },
   
   // Delhi to Agra
   { fromLocation: 'Delhi', toLocation: 'Agra', mode: 'bus', departureTime: '06:00', arrivalTime: '09:30', travelDuration: '3h 30m', date: '2025-11-10', operatorName: 'UP Roadways', availableSeats: 35, price: 400 },
@@ -105,30 +176,31 @@ const seedDatabase = async () => {
 
     // Clear existing data
     await TravelOption.deleteMany({});
-    await TouristPlace.deleteMany({});
-    await Hotel.deleteMany({});
+    if (!travelOnlyMode) {
+      await TouristPlace.deleteMany({});
+      await Hotel.deleteMany({});
+    }
 
     console.log('Existing data cleared');
 
-    // Insert travel options in day-based format
-    const travelOptionsWithDay = travelOptions.map((option) => {
-      if (option.dayOfWeek) {
-        return option;
-      }
-
-      const parsedDate = new Date(option.date);
-      const derivedDay = !Number.isNaN(parsedDate.getTime())
-        ? parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
-        : undefined;
-
+    // Create day-wise travel data so each weekday has dedicated plans.
+    const baseTravelOptions = travelOptions.map((option) => {
+      const derivedDay = option.day || getDayFromDateString(option.date);
       return {
         ...option,
-        dayOfWeek: derivedDay,
+        day: derivedDay,
       };
     });
 
-    await TravelOption.insertMany(travelOptionsWithDay);
+    const weeklyTravelOptions = createWeeklyTravelOptions(baseTravelOptions);
+
+    await TravelOption.insertMany(weeklyTravelOptions);
     console.log('Travel options seeded');
+
+    if (travelOnlyMode) {
+      console.log('Travel-only seed completed successfully!');
+      process.exit(0);
+    }
 
     // Insert tourist places
     const insertedPlaces = await TouristPlace.insertMany(touristPlaces);

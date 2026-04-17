@@ -15,20 +15,18 @@ router.post('/generate', async (req, res) => {
       return res.status(400).json({ message: 'Location, start time, and number of days are required' });
     }
 
-    // Build the query
     const query = { location: { $regex: new RegExp(location, 'i') } };
+
     if (selectedPlaceIds && Array.isArray(selectedPlaceIds) && selectedPlaceIds.length > 0) {
       query._id = { $in: selectedPlaceIds };
     }
 
-    // Fetch tourist places based on query
     const touristPlaces = await TouristPlace.find(query);
 
     if (touristPlaces.length === 0) {
       return res.status(404).json({ message: 'No tourist places found for this location' });
     }
 
-    // Generate itinerary
     const generated = generateItinerary(touristPlaces, startTime, parseInt(numberOfDays));
 
     res.json({
@@ -54,7 +52,6 @@ router.post('/generate-from-hotel', async (req, res) => {
       return res.status(400).json({ message: 'Hotel ID, check-in time, and number of days are required' });
     }
 
-    // Fetch hotel details
     const hotel = await Hotel.findById(hotelId).populate('nearbyTouristPlaces');
 
     if (!hotel) {
@@ -66,15 +63,13 @@ router.post('/generate-from-hotel', async (req, res) => {
     if (touristPlacesToUse.length === 0) {
       return res.status(404).json({ message: 'No nearby tourist places found for this hotel' });
     }
-    
-    // Filter places if user provided specific selections
+
     if (selectedPlaceIds && Array.isArray(selectedPlaceIds) && selectedPlaceIds.length > 0) {
-       touristPlacesToUse = touristPlacesToUse.filter(place => 
-          selectedPlaceIds.includes(place._id.toString())
-       );
+      touristPlacesToUse = touristPlacesToUse.filter(place =>
+        selectedPlaceIds.includes(place._id.toString())
+      );
     }
 
-    // Generate itinerary
     const generated = generateHotelItinerary(
       hotel,
       touristPlacesToUse,
@@ -103,15 +98,15 @@ router.post('/generate-from-hotel', async (req, res) => {
 // Save itinerary
 router.post('/save', async (req, res) => {
   try {
-    const { userId, destination, numberOfDays, startTime, hotel, plans, totalPlaces } = req.body;
+    const { userId, email, destination, numberOfDays, startTime, hotel, plans, totalPlaces } = req.body;
 
-    // Simple validation
-    if (!userId || !destination || !plans) {
-      return res.status(400).json({ message: 'userId, destination, and plans are required' });
+    if (!userId || !destination || !plans || !email) {
+      return res.status(400).json({ message: 'userId, email, destination, and plans are required' });
     }
 
     const newItinerary = new Itinerary({
       userId,
+      email, // 🔥 NEW (important)
       destination,
       numberOfDays,
       startTime,
@@ -121,20 +116,32 @@ router.post('/save', async (req, res) => {
     });
 
     await newItinerary.save();
-    res.status(201).json({ message: 'Itinerary saved successfully', itinerary: newItinerary });
+
+    res.status(201).json({
+      message: 'Itinerary saved successfully',
+      itinerary: newItinerary
+    });
   } catch (error) {
     console.error('Error saving itinerary:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Get user saved itineraries
-router.get('/saved/:userId', async (req, res) => {
+// Get user saved itineraries (🔥 UPDATED)
+router.get('/saved', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId, email } = req.query;
 
-    // Sort by newest first
-    const itineraries = await Itinerary.find({ userId }).sort({ createdAt: -1 });
+    if (!userId && !email) {
+      return res.status(400).json({ message: 'userId or email required' });
+    }
+
+    const itineraries = await Itinerary.find({
+      $or: [
+        { userId },
+        { email }
+      ]
+    }).sort({ createdAt: -1 });
 
     res.json(itineraries);
   } catch (error) {

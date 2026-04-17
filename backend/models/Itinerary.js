@@ -5,6 +5,10 @@ const itinerarySchema = new mongoose.Schema({
     type: String, 
     required: true,
 },
+email: { // 🔥 NEW FIELD
+        type: String,
+        required: true,
+    },
     destination: {
         type: String,
         required: true,

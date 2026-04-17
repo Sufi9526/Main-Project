@@ -16,34 +16,47 @@ const SavedItineraries = () => {
         fetchSavedItineraries();
     }, []);
 
-    const getUserId = () => {
+    // 🔥 GET FULL USER
+    const getUser = () => {
         try {
             const userStr = localStorage.getItem("user");
             if (!userStr) return null;
-
-            const user = JSON.parse(userStr);
-            return user.uid || null;
+            return JSON.parse(userStr);
         } catch (e) {
             console.error("User parse error");
             return null;
         }
     };
 
+    // 🔥 SUPPORT BOTH LOGIN TYPES
+    const getUserId = () => {
+        const user = getUser();
+        if (!user) return null;
+
+        return user.uid || user._id || null;
+    };
+
     const fetchSavedItineraries = async () => {
         try {
+            const user = getUser();
             const userId = getUserId();
 
-            if (!userId) {
+            if (!user || !userId) {
                 setError("Please login to see your saved itineraries");
-                console.log(error);
                 setLoading(false);
                 return;
             }
 
-            console.log("Fetching for userId:", userId); // DEBUG
+            console.log("Fetching:", userId, user.email);
 
             const response = await axios.get(
-                `${BASE_URL}/api/itinerary/saved/${userId}`
+                `${BASE_URL}/api/itinerary/saved`,
+                {
+                    params: {
+                        userId,
+                        email: user.email
+                    }
+                }
             );
 
             setItineraries(response.data);

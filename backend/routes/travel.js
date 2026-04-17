@@ -20,20 +20,24 @@ router.post('/search', async (req, res) => {
 
     const modeFilter = mode === 'all' ? { $in: ['bus', 'train'] } : mode;
 
-    // Prefer an exact date match; fallback to weekday plans for recurring schedules.
-    let travelOptions = await TravelOption.find({
-      date: date,
-      fromLocation: fromLocation,
-      toLocation: toLocation,
-      mode: modeFilter,
-      departureTime: { $gt: time },
-    })
-      .sort({ departureTime: 1 })
-      .limit(3);
-
-    if (travelOptions.length === 0 && dayOfWeek) {
+    // Always prefer weekday-specific schedules so each day can have different plans.
+    let travelOptions = [];
+    if (dayOfWeek) {
       travelOptions = await TravelOption.find({
         dayOfWeek: dayOfWeek,
+        fromLocation: fromLocation,
+        toLocation: toLocation,
+        mode: modeFilter,
+        departureTime: { $gt: time },
+      })
+        .sort({ departureTime: 1 })
+        .limit(3);
+    }
+
+    // Fallback for legacy seeded records that only have an exact date.
+    if (travelOptions.length === 0) {
+      travelOptions = await TravelOption.find({
+        date: date,
         fromLocation: fromLocation,
         toLocation: toLocation,
         mode: modeFilter,

@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ItineraryDisplay from "../components/ItineraryDisplay";
 import { Trash2 } from "lucide-react";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const SavedItineraries = () => {
@@ -15,29 +16,24 @@ const SavedItineraries = () => {
         fetchSavedItineraries();
     }, []);
 
+    const getUserId = () => {
+        try {
+            const userStr = localStorage.getItem("user");
+            if (!userStr) return null;
+
+            const user = JSON.parse(userStr);
+
+            // 🔥 ONLY Firebase UID use ചെയ്യുക
+            return user.uid || null;
+        } catch (e) {
+            console.error("User parse error");
+            return null;
+        }
+    };
+
     const fetchSavedItineraries = async () => {
         try {
-            let userId = null;
-            const userStr = localStorage.getItem("user");
-
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    userId = user._id || user.id || user.uid;
-                } catch (e) { }
-            }
-
-            if (!userId) {
-                const token = localStorage.getItem("token");
-                if (token) {
-                    try {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        userId = payload.id || payload._id;
-                    } catch (e) {
-                        console.error("Failed to parse token");
-                    }
-                }
-            }
+            const userId = getUserId();
 
             if (!userId) {
                 setError("Please login to see your saved itineraries");
@@ -45,10 +41,15 @@ const SavedItineraries = () => {
                 return;
             }
 
-            const response = await axios.get(`${BASE_URL}/api/itinerary/saved/${userId}`);
+            console.log("Fetching for userId:", userId); // DEBUG
+
+            const response = await axios.get(
+                `${BASE_URL}/api/itinerary/saved/${userId}`
+            );
+
             setItineraries(response.data);
         } catch (err) {
-            console.error(err);
+            console.error("FETCH ERROR:", err);
             setError("Failed to fetch saved itineraries");
         } finally {
             setLoading(false);
@@ -56,13 +57,13 @@ const SavedItineraries = () => {
     };
 
     const handleDelete = async (e, id) => {
-        e.stopPropagation(); // Prevent expanding the card
+        e.stopPropagation();
         if (!window.confirm("Are you sure you want to delete this itinerary?")) return;
 
         setDeletingId(id);
         try {
             await axios.delete(`${BASE_URL}/api/itinerary/${id}`);
-            // Remove from local state
+
             setItineraries(prev => prev.filter(it => it._id !== id));
             if (expandedId === id) setExpandedId(null);
         } catch (err) {
@@ -100,8 +101,12 @@ const SavedItineraries = () => {
 
                 {itineraries.length === 0 && !error ? (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No Saved Itineraries</h3>
-                        <p className="text-gray-500">You haven't saved any itineraries yet.</p>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                            No Saved Itineraries
+                        </h3>
+                        <p className="text-gray-500">
+                            You haven't saved any itineraries yet.
+                        </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -109,44 +114,48 @@ const SavedItineraries = () => {
                             <div
                                 key={itinerary._id}
                                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col"
-                                onClick={() => setExpandedId(expandedId === itinerary._id ? null : itinerary._id)}
+                                onClick={() =>
+                                    setExpandedId(
+                                        expandedId === itinerary._id ? null : itinerary._id
+                                    )
+                                }
                             >
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-800 line-clamp-1">{itinerary.destination}</h3>
+                                            <h3 className="text-xl font-bold text-gray-800 line-clamp-1">
+                                                {itinerary.destination}
+                                            </h3>
                                             <p className="text-sm text-gray-500">
-                                                {new Date(itinerary.createdAt).toLocaleDateString(undefined, {
-                                                    year: 'numeric', month: 'long', day: 'numeric'
-                                                })}
+                                                {new Date(itinerary.createdAt).toLocaleDateString()}
                                             </p>
                                         </div>
+
                                         <div className="flex items-center gap-3">
-                                            <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                                                {itinerary.numberOfDays} {itinerary.numberOfDays === 1 ? 'Day' : 'Days'}
+                                            <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                                {itinerary.numberOfDays} Days
                                             </span>
+
                                             <button
                                                 onClick={(e) => handleDelete(e, itinerary._id)}
                                                 disabled={deletingId === itinerary._id}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition disabled:opacity-50"
-                                                title="Delete itinerary"
+                                                className="text-red-500 hover:text-red-700 p-2"
                                             >
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2 text-sm text-gray-600">
-                                        <p>⏱️ Starts at: {itinerary.startTime}</p>
-                                        <p>📍 Total Places: {itinerary.totalPlaces || 0}</p>
-                                        {itinerary.hotel && (
-                                            <p className="line-clamp-1">🏨 Hotel: {itinerary.hotel.name}</p>
-                                        )}
+                                    <div className="text-sm text-gray-600">
+                                        <p>⏱️ {itinerary.startTime}</p>
+                                        <p>📍 {itinerary.totalPlaces || 0} places</p>
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-50 p-3 text-center text-sm font-medium text-blue-600 border-t mt-auto">
-                                    {expandedId === itinerary._id ? "Collapse Details ↑" : "View Full Itinerary ↓"}
+                                <div className="bg-gray-50 p-3 text-center text-blue-600">
+                                    {expandedId === itinerary._id
+                                        ? "Collapse ↑"
+                                        : "View ↓"}
                                 </div>
                             </div>
                         ))}
@@ -155,10 +164,8 @@ const SavedItineraries = () => {
 
                 {expandedId && (
                     <div className="mt-10 border-t pt-10">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Full Itinerary Details</h3>
                         <ItineraryDisplay
                             itinerary={{
-                                // Transform the saved mongodoc back into the shape ItineraryDisplay expects
                                 itinerary: itineraries.find(i => i._id === expandedId).plans,
                                 totalPlaces: itineraries.find(i => i._id === expandedId).totalPlaces,
                                 hotel: itineraries.find(i => i._id === expandedId).hotel,

@@ -22,8 +22,6 @@ const SavedItineraries = () => {
             if (!userStr) return null;
 
             const user = JSON.parse(userStr);
-
-            // 🔥 ONLY Firebase UID use ചെയ്യുക
             return user.uid || null;
         } catch (e) {
             console.error("User parse error");
@@ -37,6 +35,7 @@ const SavedItineraries = () => {
 
             if (!userId) {
                 setError("Please login to see your saved itineraries");
+                console.log(error);
                 setLoading(false);
                 return;
             }

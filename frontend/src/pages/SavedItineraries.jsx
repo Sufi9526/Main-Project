@@ -16,7 +16,7 @@ const SavedItineraries = () => {
         fetchSavedItineraries();
     }, []);
 
-    // 🔥 GET FULL USER
+    // 🔥 GET USER FROM LOCAL STORAGE
     const getUser = () => {
         try {
             const userStr = localStorage.getItem("user");
@@ -32,10 +32,10 @@ const SavedItineraries = () => {
     const getUserId = () => {
         const user = getUser();
         if (!user) return null;
-
         return user.uid || user._id || null;
     };
 
+    // 🔥 FIXED FETCH FUNCTION
     const fetchSavedItineraries = async () => {
         try {
             const user = getUser();
@@ -49,6 +49,7 @@ const SavedItineraries = () => {
 
             console.log("Fetching:", userId, user.email);
 
+            // ✅ NEW API CALL (IMPORTANT FIX)
             const response = await axios.get(
                 `${BASE_URL}/api/itinerary/saved`,
                 {

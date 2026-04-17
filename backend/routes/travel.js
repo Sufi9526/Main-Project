@@ -14,38 +14,23 @@ router.post('/search', async (req, res) => {
     }
 
     const parsedDate = new Date(date);
-    const dayOfWeek = !Number.isNaN(parsedDate.getTime())
-      ? parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
-      : null;
+    if (Number.isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+    const dayOfWeek = parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
     const modeFilter = mode === 'all' ? { $in: ['bus', 'train'] } : mode;
 
-    // Always prefer weekday-specific schedules so each day can have different plans.
-    let travelOptions = [];
-    if (dayOfWeek) {
-      travelOptions = await TravelOption.find({
-        dayOfWeek: dayOfWeek,
-        fromLocation: fromLocation,
-        toLocation: toLocation,
-        mode: modeFilter,
-        departureTime: { $gt: time },
-      })
-        .sort({ departureTime: 1 })
-        .limit(3);
-    }
-
-    // Fallback for legacy seeded records that only have an exact date.
-    if (travelOptions.length === 0) {
-      travelOptions = await TravelOption.find({
-        date: date,
-        fromLocation: fromLocation,
-        toLocation: toLocation,
-        mode: modeFilter,
-        departureTime: { $gt: time },
-      })
-        .sort({ departureTime: 1 })
-        .limit(3);
-    }
+    // Build plans by weekday derived from the entered date.
+    const travelOptions = await TravelOption.find({
+      dayOfWeek: dayOfWeek,
+      fromLocation: fromLocation,
+      toLocation: toLocation,
+      mode: modeFilter,
+      departureTime: { $gt: time },
+    })
+      .sort({ departureTime: 1 })
+      .limit(3);
 
     res.json(travelOptions);
   } catch (error) {

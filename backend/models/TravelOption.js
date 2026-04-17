@@ -28,11 +28,12 @@ const travelOptionSchema = new mongoose.Schema({
   },
   date: {
     type: String,
-    required: true,
+    required: false,
   },
   dayOfWeek: {
     type: String,
     enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    required: true,
   },
   operatorName: {
     type: String,
@@ -48,6 +49,16 @@ const travelOptionSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+});
+
+travelOptionSchema.pre('validate', function deriveDayFromDate(next) {
+  if (!this.dayOfWeek && this.date) {
+    const parsedDate = new Date(this.date);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      this.dayOfWeek = parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    }
+  }
+  next();
 });
 
 const TravelOption = mongoose.model('TravelOption', travelOptionSchema);

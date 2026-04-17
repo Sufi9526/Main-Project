@@ -110,8 +110,24 @@ const seedDatabase = async () => {
 
     console.log('Existing data cleared');
 
-    // Insert travel options
-    await TravelOption.insertMany(travelOptions);
+    // Insert travel options in day-based format
+    const travelOptionsWithDay = travelOptions.map((option) => {
+      if (option.dayOfWeek) {
+        return option;
+      }
+
+      const parsedDate = new Date(option.date);
+      const derivedDay = !Number.isNaN(parsedDate.getTime())
+        ? parsedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+        : undefined;
+
+      return {
+        ...option,
+        dayOfWeek: derivedDay,
+      };
+    });
+
+    await TravelOption.insertMany(travelOptionsWithDay);
     console.log('Travel options seeded');
 
     // Insert tourist places

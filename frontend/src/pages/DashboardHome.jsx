@@ -20,15 +20,20 @@ export default function DashboardHome() {
           setUser(currentUser);
         }
 
-        if (currentUser) {
-          // Attempt to fetch saved itineraries count
-          const userId = currentUser._id || currentUser.id || currentUser.uid;
-          
-          if (userId) {
-            const res = await axios.get(`${BASE_URL}/api/itinerary/saved/${userId}`);
-            setSavedTripsCount(res.data.length);
-          }
-        }
+if (currentUser) {
+  const userId = currentUser.uid || currentUser._id || currentUser.id;
+
+  if (userId) {
+    const res = await axios.get(`${BASE_URL}/api/itinerary/saved`, {
+      params: {
+        userId,
+        email: currentUser.email
+      }
+    });
+
+    setSavedTripsCount(res.data.length);
+  }
+}
       } catch (e) {
         console.error("Failed to load dashboard data", e);
       } finally {

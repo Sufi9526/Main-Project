@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = false }) => {
@@ -13,28 +14,25 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
 
     try {
       let userId = null;
+      let email = null;
+
       const userStr = localStorage.getItem("user");
 
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          userId = user._id || user.id || user.uid;
-        } catch (e) { }
-      }
 
-      if (!userId) {
-        const token = localStorage.getItem("token");
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            userId = payload.id || payload._id;
-          } catch (e) {
-            console.error("Failed to parse token");
-          }
+          // 🔥 SUPPORT BOTH LOGIN TYPES
+          userId = user.uid || user._id || user.id;
+          email = user.email || null;
+
+        } catch (e) {
+          console.error("User parse error");
         }
       }
 
-      if (!userId) {
+      // ❌ If user not logged in properly
+      if (!userId || !email) {
         setError("Please login to save the itinerary.");
         setSaving(false);
         return;
@@ -42,24 +40,30 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
 
       await axios.post(`${BASE_URL}/api/itinerary/save`, {
         userId,
-        // When using hotel, destination location might be in hotel.location or travelData
-        destination: itinerary.location || (itinerary.hotel && itinerary.hotel.location) || "Custom Destination",
+        email, // 🔥 IMPORTANT FIX
+        destination:
+          itinerary.location ||
+          (itinerary.hotel && itinerary.hotel.location) ||
+          "Custom Destination",
         numberOfDays: itinerary.numberOfDays,
         startTime: itinerary.startTime || itinerary.checkInTime || "09:00",
         hotel: itinerary.hotel || null,
         plans: itinerary.itinerary,
-        totalPlaces: itinerary.includedPlacesCount !== undefined ? itinerary.includedPlacesCount : itinerary.totalPlaces || 0
+        totalPlaces:
+          itinerary.includedPlacesCount !== undefined
+            ? itinerary.includedPlacesCount
+            : itinerary.totalPlaces || 0,
       });
 
       setSaveSuccess(true);
     } catch (err) {
       console.error(err);
       setError("Failed to save itinerary.");
-      console.log(error);
     } finally {
       setSaving(false);
     }
   };
+
   // No itinerary at all
   if (!itinerary || !itinerary.itinerary || itinerary.itinerary.length === 0) {
     return (
@@ -72,10 +76,7 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       {itinerary.itinerary.map((dayPlan) => (
-        <div
-          key={dayPlan.day}
-          className="bg-white rounded-2xl shadow-md p-6"
-        >
+        <div key={dayPlan.day} className="bg-white rounded-2xl shadow-md p-6">
           {/* Day Header */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-800">
@@ -88,7 +89,6 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
 
           {/* Places List */}
           <div className="space-y-4">
-            {/* EMPTY DAY */}
             {dayPlan.noPlaces || dayPlan.places.length === 0 ? (
               <div className="border border-dashed border-gray-300 rounded-xl p-6 bg-gray-50">
                 <h4 className="text-lg font-semibold text-gray-700 mb-2">
@@ -107,9 +107,10 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
                 <div
                   key={idx}
                   className={`flex gap-4 p-4 rounded-xl border transition
-                    ${place.isStartingPoint
-                      ? "border-blue-400 bg-blue-50"
-                      : place.isEndPoint
+                    ${
+                      place.isStartingPoint
+                        ? "border-blue-400 bg-blue-50"
+                        : place.isEndPoint
                         ? "border-green-400 bg-green-50"
                         : "border-gray-200 bg-white"
                     }`}
@@ -158,9 +159,13 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
       )}
 
       {/* Summary */}
-      {(itinerary.includedPlacesCount !== undefined || itinerary.totalPlaces !== undefined) && (
+      {(itinerary.includedPlacesCount !== undefined ||
+        itinerary.totalPlaces !== undefined) && (
         <div className="bg-gray-100 rounded-xl p-4 text-center font-semibold text-gray-700">
-          Total Places Covered: {itinerary.includedPlacesCount !== undefined ? itinerary.includedPlacesCount : itinerary.totalPlaces}
+          Total Places Covered:{" "}
+          {itinerary.includedPlacesCount !== undefined
+            ? itinerary.includedPlacesCount
+            : itinerary.totalPlaces}
         </div>
       )}
 

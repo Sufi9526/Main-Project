@@ -203,6 +203,12 @@ const TravelSearch = () => {
             </div>
           </div>
         )}
+
+        {searchPerformed && travelOptions.length === 0 && (
+          <div className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 text-sm">
+            No travel options found for {formData.date ? new Date(formData.date.split('-')[0], formData.date.split('-')[1] - 1, formData.date.split('-')[2]).toLocaleDateString('en-US', { weekday: 'long' }) : 'this date'}. Try changing date, time, or mode.
+          </div>
+        )}
       </div>
     </div>
   );

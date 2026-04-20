@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../firebase";
 const API_URL = import.meta.env.VITE_API_URL;
-// const API_URL = "http://localhost:5000/api/auth";
 
 const supabase = {
   auth: {
@@ -132,7 +131,7 @@ export default function Auth() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-blue-600">Travel Planner</h1>
           <p className="text-gray-500 text-sm">
-            Welcome to yourg travel planning platform
+            Welcome to your travel planning platform
           </p>
         </div>
         {!isForgotPassword && (

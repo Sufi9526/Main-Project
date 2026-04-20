@@ -132,7 +132,7 @@ export default function Auth() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-blue-600">Travel Planner</h1>
           <p className="text-gray-500 text-sm">
-            Welcome to your travel planning platform
+            Welcome to yourg travel planning platform
           </p>
         </div>
         {!isForgotPassword && (

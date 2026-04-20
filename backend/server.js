@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 /* ================= CORS SETUP ================= */
+
 const allowedOrigins = [
   "http://localhost:5173",
   "https://main-project-4b3u.vercel.app"
@@ -25,21 +26,25 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
+
+    // allow mobile apps / postman / server-to-server
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
-    } else {
-      return callback(new Error("Not allowed by CORS"));
     }
+
+    // ❗ instead of crashing server, just block request safely
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ✅ Handle preflight (VERY IMPORTANT)
+// Preflight
 app.options("*", cors());
+
 /* ============================================== */
 
 // Middleware
@@ -62,9 +67,10 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res
-    .status(500)
-    .json({ message: 'Something went wrong!', error: err.message });
+  res.status(500).json({ 
+    message: 'Something went wrong!', 
+    error: err.message 
+  });
 });
 
 app.listen(PORT, () => {

@@ -79,7 +79,7 @@ const createWeeklyTravelOptions = (baseOptions) => {
 
       return {
         ...option,
-        day,
+        dayOfWeek: day,
         departureTime: shiftTimeByMinutes(option.departureTime, minuteShift),
         arrivalTime: shiftTimeByMinutes(option.arrivalTime, minuteShift),
         availableSeats: Math.max(5, option.availableSeats - seatAdjustment),
@@ -185,10 +185,10 @@ const seedDatabase = async () => {
 
     // Create day-wise travel data so each weekday has dedicated plans.
     const baseTravelOptions = travelOptions.map((option) => {
-      const derivedDay = option.day || getDayFromDateString(option.date);
+      const derivedDay = option.dayOfWeek || getDayFromDateString(option.date);
       return {
         ...option,
-        day: derivedDay,
+        dayOfWeek: derivedDay,
       };
     });
 

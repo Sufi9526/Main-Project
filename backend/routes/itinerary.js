@@ -154,15 +154,18 @@ router.get('/saved', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { plans, totalPlaces } = req.body;
+    const { plans, totalPlaces, numberOfDays } = req.body;
 
     if (!plans) {
       return res.status(400).json({ message: 'Plans data is required for update' });
     }
 
+    const updateData = { plans, totalPlaces };
+    if (numberOfDays) updateData.numberOfDays = numberOfDays;
+
     const updatedItinerary = await Itinerary.findByIdAndUpdate(
       id,
-      { plans, totalPlaces },
+      updateData,
       { new: true }
     );
 

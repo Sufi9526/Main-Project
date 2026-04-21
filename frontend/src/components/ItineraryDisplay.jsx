@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Trash2, Edit, Save, X } from "lucide-react";
+import { Trash2, Edit, Save, X, Plus, PlusCircle, MinusCircle } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -33,6 +33,7 @@ const ItineraryDisplay = ({
         // Updating an existing saved itinerary
         await axios.put(`${BASE_URL}/api/itinerary/${savedItineraryId}`, {
           plans: localPlans,
+          numberOfDays: localPlans.length,
           totalPlaces: localPlans.reduce((acc, day) => acc + (day.places ? day.places.length : 0), 0)
         });
         
@@ -68,7 +69,7 @@ const ItineraryDisplay = ({
             itinerary.location ||
             (itinerary.hotel && itinerary.hotel.location) ||
             "Custom Destination",
-          numberOfDays: itinerary.numberOfDays,
+          numberOfDays: localPlans.length,
           startTime: itinerary.startTime || itinerary.checkInTime || "09:00",
           hotel: itinerary.hotel || null,
           plans: localPlans,
@@ -93,6 +94,54 @@ const ItineraryDisplay = ({
       newPlans[dayIndex].noPlaces = true;
     }
     setLocalPlans(newPlans);
+  };
+
+  const handleAddPlace = (dayIndex) => {
+    const newPlans = [...localPlans];
+    const newPlace = {
+      name: "New Tourist Attraction",
+      startTime: "10:00",
+      duration: 1.5,
+      description: "Description of the new place to visit.",
+      category: "Attraction",
+    };
+    
+    if (!newPlans[dayIndex].places) {
+      newPlans[dayIndex].places = [newPlace];
+      newPlans[dayIndex].noPlaces = false;
+    } else {
+      // If it's a hotel-based itinerary, insert before the return to hotel point
+      const endPointIdx = newPlans[dayIndex].places.findIndex(p => p.isEndPoint);
+      if (endPointIdx !== -1) {
+        newPlans[dayIndex].places.splice(endPointIdx, 0, newPlace);
+      } else {
+        newPlans[dayIndex].places.push(newPlace);
+      }
+      newPlans[dayIndex].noPlaces = false;
+    }
+    setLocalPlans(newPlans);
+  };
+
+  const handleAddDay = () => {
+    const nextDay = localPlans.length + 1;
+    const newDay = {
+      day: nextDay,
+      places: [],
+      noPlaces: true
+    };
+    setLocalPlans([...localPlans, newDay]);
+  };
+
+  const handleRemoveDay = (dayIndex) => {
+    if (window.confirm(`Are you sure you want to remove Day ${localPlans[dayIndex].day}?`)) {
+      const newPlans = localPlans.filter((_, idx) => idx !== dayIndex);
+      // Re-index days
+      const reindexedPlans = newPlans.map((day, idx) => ({
+        ...day,
+        day: idx + 1
+      }));
+      setLocalPlans(reindexedPlans);
+    }
   };
 
   const handlePlaceChange = (dayIndex, placeIndex, field, value) => {
@@ -146,9 +195,20 @@ const ItineraryDisplay = ({
             <h3 className="text-2xl font-bold text-gray-800">
               Day {dayPlan.day}
             </h3>
-            <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1 rounded-full">
-              Day {dayPlan.day}
-            </span>
+            <div className="flex items-center gap-3">
+              {isEditing && (
+                <button
+                  onClick={() => handleRemoveDay(dayIdx)}
+                  className="flex items-center gap-1 px-3 py-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition text-xs font-semibold"
+                  title="Remove this day"
+                >
+                  <MinusCircle size={14} /> Remove Day
+                </button>
+              )}
+              <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1 rounded-full">
+                Day {dayPlan.day}
+              </span>
+            </div>
           </div>
 
           {/* Places List */}
@@ -192,58 +252,110 @@ const ItineraryDisplay = ({
                   {/* Time Box */}
                   <div className="flex flex-col items-center min-w-[70px]">
                     {isEditing && !place.isStartingPoint && !place.isEndPoint ? (
-                      <input 
-                        type="time" 
-                        value={place.startTime} 
-                        onChange={(e) => handlePlaceChange(dayIdx, idx, "startTime", e.target.value)}
-                        className="text-sm font-bold text-gray-800 border border-gray-300 rounded px-1 py-1 w-20 text-center focus:outline-none focus:border-blue-500 bg-white"
-                      />
+                      <div className="space-y-2">
+                        <div className="flex flex-col items-center">
+                          <label className="text-[10px] text-gray-400 font-bold uppercase">Time</label>
+                          <input 
+                            type="time" 
+                            value={place.startTime} 
+                            onChange={(e) => handlePlaceChange(dayIdx, idx, "startTime", e.target.value)}
+                            className="text-sm font-bold text-gray-800 border border-gray-300 rounded px-1 py-1 w-20 text-center focus:outline-none focus:border-blue-500 bg-white"
+                          />
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <label className="text-[10px] text-gray-400 font-bold uppercase">Duration</label>
+                          <input 
+                            type="number" 
+                            step="0.5"
+                            value={place.duration} 
+                            onChange={(e) => handlePlaceChange(dayIdx, idx, "duration", parseFloat(e.target.value))}
+                            className="text-sm font-bold text-gray-800 border border-gray-300 rounded px-1 py-1 w-14 text-center focus:outline-none focus:border-blue-500 bg-white"
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <div className="text-sm font-bold text-gray-800">
-                        {place.startTime}
-                      </div>
-                    )}
-                    
-                    {place.duration > 0 && (
-                      <div className="mt-1 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                        {place.duration}h
-                      </div>
+                      <>
+                        <div className="text-sm font-bold text-gray-800">
+                          {place.startTime}
+                        </div>
+                        {place.duration > 0 && (
+                          <div className="mt-1 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                            {place.duration}h
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
                   {/* Place Info */}
                   <div className="flex-1 min-w-0">
                     {isEditing && !place.isStartingPoint && !place.isEndPoint ? (
-                      <input 
-                        type="text"
-                        value={place.name}
-                        onChange={(e) => handlePlaceChange(dayIdx, idx, "name", e.target.value)}
-                        className="text-lg font-semibold text-gray-800 mb-1 w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 bg-white"
-                        placeholder="Place name"
-                      />
+                      <div className="space-y-2">
+                        <input 
+                          type="text"
+                          value={place.name}
+                          onChange={(e) => handlePlaceChange(dayIdx, idx, "name", e.target.value)}
+                          className="text-lg font-semibold text-gray-800 w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 bg-white"
+                          placeholder="Place name"
+                        />
+                        <textarea 
+                          value={place.description}
+                          onChange={(e) => handlePlaceChange(dayIdx, idx, "description", e.target.value)}
+                          className="text-gray-600 text-sm w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 bg-white min-h-[60px]"
+                          placeholder="Place description"
+                        />
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            value={place.category}
+                            onChange={(e) => handlePlaceChange(dayIdx, idx, "category", e.target.value)}
+                            className="bg-purple-50 text-purple-700 text-xs font-medium px-3 py-1 rounded-full border border-purple-200 focus:outline-none focus:border-purple-500 w-32"
+                            placeholder="Category"
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <h4 className="text-lg font-semibold text-gray-800 mb-1 truncate">
-                        {place.isStartingPoint && <span>🏁 </span>}
-                        {place.isEndPoint && <span>🏠 </span>}
-                        {place.name}
-                      </h4>
-                    )}
-                    
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                      {place.description}
-                    </p>
-                    {place.category && (
-                      <span className="inline-block bg-purple-100 text-purple-700 text-xs font-medium px-3 py-1 rounded-full">
-                        {place.category}
-                      </span>
+                      <>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+                          {place.isStartingPoint && <span>🏁 </span>}
+                          {place.isEndPoint && <span>🏠 </span>}
+                          {place.name}
+                        </h4>
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                          {place.description}
+                        </p>
+                        {place.category && (
+                          <span className="inline-block bg-purple-100 text-purple-700 text-xs font-medium px-3 py-1 rounded-full">
+                            {place.category}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               ))
             )}
+            
+            {isEditing && (
+              <button
+                onClick={() => handleAddPlace(dayIdx)}
+                className="w-full flex items-center justify-center gap-2 p-3 mt-4 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 hover:bg-blue-50 transition font-medium"
+              >
+                <Plus size={18} /> Add Place to Day {dayPlan.day}
+              </button>
+            )}
           </div>
         </div>
       ))}
+
+      {isEditing && (
+        <button
+          onClick={handleAddDay}
+          className="w-full flex items-center justify-center gap-2 p-4 bg-white border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:bg-gray-50 hover:border-blue-300 transition font-bold"
+        >
+          <PlusCircle size={24} /> Add Another Day
+        </button>
+      )}
 
       {/* Hotel note */}
       {isHotelBased && itinerary.hotel && (

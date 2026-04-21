@@ -1,71 +1,107 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Trash2, Edit, Save, X } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = false }) => {
+const ItineraryDisplay = ({ 
+  itinerary, 
+  isHotelBased = false, 
+  hideSaveButton = false,
+  savedItineraryId = null,
+  onUpdateSuccess = null
+}) => {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [localPlans, setLocalPlans] = useState([]);
 
-  const handleSaveItinerary = async () => {
+  useEffect(() => {
+    if (itinerary && itinerary.itinerary) {
+      setLocalPlans(JSON.parse(JSON.stringify(itinerary.itinerary)));
+    }
+  }, [itinerary]);
+
+  const handleSaveOrUpdateItinerary = async () => {
     setSaving(true);
     setError("");
 
     try {
-      let userId = null;
-      let email = null;
+      if (savedItineraryId) {
+        // Updating an existing saved itinerary
+        await axios.put(`${BASE_URL}/api/itinerary/${savedItineraryId}`, {
+          plans: localPlans,
+          totalPlaces: localPlans.reduce((acc, day) => acc + (day.places ? day.places.length : 0), 0)
+        });
+        
+        setSaveSuccess(true);
+        setIsEditing(false);
+        if (onUpdateSuccess) onUpdateSuccess();
+      } else {
+        // Saving a newly generated itinerary
+        let userId = null;
+        let email = null;
+        const userStr = localStorage.getItem("user");
 
-      const userStr = localStorage.getItem("user");
-
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-
-          // 🔥 SUPPORT BOTH LOGIN TYPES
-          userId = user.uid || user._id || user.id;
-          email = user.email || null;
-
-        } catch (e) {
-          console.error("User parse error");
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            userId = user.uid || user._id || user.id;
+            email = user.email || null;
+          } catch (e) {
+            console.error("User parse error");
+          }
         }
+
+        if (!userId || !email) {
+          setError("Please login to save the itinerary.");
+          setSaving(false);
+          return;
+        }
+
+        await axios.post(`${BASE_URL}/api/itinerary/save`, {
+          userId,
+          email,
+          destination:
+            itinerary.location ||
+            (itinerary.hotel && itinerary.hotel.location) ||
+            "Custom Destination",
+          numberOfDays: itinerary.numberOfDays,
+          startTime: itinerary.startTime || itinerary.checkInTime || "09:00",
+          hotel: itinerary.hotel || null,
+          plans: localPlans,
+          totalPlaces: localPlans.reduce((acc, day) => acc + (day.places ? day.places.length : 0), 0)
+        });
+
+        setSaveSuccess(true);
+        setIsEditing(false);
       }
-
-      // ❌ If user not logged in properly
-      if (!userId || !email) {
-        setError("Please login to save the itinerary.");
-        setSaving(false);
-        return;
-      }
-
-      await axios.post(`${BASE_URL}/api/itinerary/save`, {
-        userId,
-        email, // 🔥 IMPORTANT FIX
-        destination:
-          itinerary.location ||
-          (itinerary.hotel && itinerary.hotel.location) ||
-          "Custom Destination",
-        numberOfDays: itinerary.numberOfDays,
-        startTime: itinerary.startTime || itinerary.checkInTime || "09:00",
-        hotel: itinerary.hotel || null,
-        plans: itinerary.itinerary,
-        totalPlaces:
-          itinerary.includedPlacesCount !== undefined
-            ? itinerary.includedPlacesCount
-            : itinerary.totalPlaces || 0,
-      });
-
-      setSaveSuccess(true);
     } catch (err) {
       console.error(err);
-      setError("Failed to save itinerary.");
+      setError(`Failed to ${savedItineraryId ? 'update' : 'save'} itinerary.`);
     } finally {
       setSaving(false);
     }
   };
 
-  // No itinerary at all
-  if (!itinerary || !itinerary.itinerary || itinerary.itinerary.length === 0) {
+  const handleRemovePlace = (dayIndex, placeIndex) => {
+    const newPlans = [...localPlans];
+    newPlans[dayIndex].places.splice(placeIndex, 1);
+    if (newPlans[dayIndex].places.length === 0) {
+      newPlans[dayIndex].noPlaces = true;
+    }
+    setLocalPlans(newPlans);
+  };
+
+  const handlePlaceChange = (dayIndex, placeIndex, field, value) => {
+    const newPlans = [...localPlans];
+    newPlans[dayIndex].places[placeIndex][field] = value;
+    setLocalPlans(newPlans);
+  };
+
+  if (!localPlans || localPlans.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500 text-lg">
         No itinerary available
@@ -75,8 +111,36 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      {itinerary.itinerary.map((dayPlan) => (
-        <div key={dayPlan.day} className="bg-white rounded-2xl shadow-md p-6">
+      {/* Top action bar */}
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Your Trip Plan</h2>
+        <div className="flex gap-3">
+          {isEditing ? (
+            <button 
+              onClick={() => {
+                setIsEditing(false);
+                setLocalPlans(JSON.parse(JSON.stringify(itinerary.itinerary)));
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium"
+            >
+              <X size={18} /> Cancel
+            </button>
+          ) : (
+            <button 
+              onClick={() => {
+                setIsEditing(true);
+                setSaveSuccess(false);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition font-medium"
+            >
+              <Edit size={18} /> Edit Plan
+            </button>
+          )}
+        </div>
+      </div>
+
+      {localPlans.map((dayPlan, dayIdx) => (
+        <div key={dayPlan.day || dayIdx} className={`bg-white rounded-2xl shadow-md p-6 ${isEditing ? 'border-2 border-blue-100' : ''}`}>
           {/* Day Header */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-800">
@@ -89,7 +153,7 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
 
           {/* Places List */}
           <div className="space-y-4">
-            {dayPlan.noPlaces || dayPlan.places.length === 0 ? (
+            {dayPlan.noPlaces || !dayPlan.places || dayPlan.places.length === 0 ? (
               <div className="border border-dashed border-gray-300 rounded-xl p-6 bg-gray-50">
                 <h4 className="text-lg font-semibold text-gray-700 mb-2">
                   No tourist places to visit today
@@ -106,20 +170,40 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
               dayPlan.places.map((place, idx) => (
                 <div
                   key={idx}
-                  className={`flex gap-4 p-4 rounded-xl border transition
+                  className={`flex gap-4 p-4 rounded-xl border transition relative group
                     ${
                       place.isStartingPoint
                         ? "border-blue-400 bg-blue-50"
                         : place.isEndPoint
                         ? "border-green-400 bg-green-50"
                         : "border-gray-200 bg-white"
-                    }`}
+                    } ${isEditing ? "hover:border-blue-300 bg-blue-50/20" : ""}`}
                 >
+                  {isEditing && (
+                    <button 
+                      onClick={() => handleRemovePlace(dayIdx, idx)}
+                      className="absolute -right-2 -top-2 bg-red-100 text-red-600 p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-200"
+                      title="Remove place"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+
                   {/* Time Box */}
-                  <div className="flex flex-col items-center min-w-17.5">
-                    <div className="text-sm font-bold text-gray-800">
-                      {place.startTime}
-                    </div>
+                  <div className="flex flex-col items-center min-w-[70px]">
+                    {isEditing && !place.isStartingPoint && !place.isEndPoint ? (
+                      <input 
+                        type="time" 
+                        value={place.startTime} 
+                        onChange={(e) => handlePlaceChange(dayIdx, idx, "startTime", e.target.value)}
+                        className="text-sm font-bold text-gray-800 border border-gray-300 rounded px-1 py-1 w-20 text-center focus:outline-none focus:border-blue-500 bg-white"
+                      />
+                    ) : (
+                      <div className="text-sm font-bold text-gray-800">
+                        {place.startTime}
+                      </div>
+                    )}
+                    
                     {place.duration > 0 && (
                       <div className="mt-1 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                         {place.duration}h
@@ -128,13 +212,24 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
                   </div>
 
                   {/* Place Info */}
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-1">
-                      {place.isStartingPoint && <span>🏁 </span>}
-                      {place.isEndPoint && <span>🏠 </span>}
-                      {place.name}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-2">
+                  <div className="flex-1 min-w-0">
+                    {isEditing && !place.isStartingPoint && !place.isEndPoint ? (
+                      <input 
+                        type="text"
+                        value={place.name}
+                        onChange={(e) => handlePlaceChange(dayIdx, idx, "name", e.target.value)}
+                        className="text-lg font-semibold text-gray-800 mb-1 w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 bg-white"
+                        placeholder="Place name"
+                      />
+                    ) : (
+                      <h4 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+                        {place.isStartingPoint && <span>🏁 </span>}
+                        {place.isEndPoint && <span>🏠 </span>}
+                        {place.name}
+                      </h4>
+                    )}
+                    
+                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                       {place.description}
                     </p>
                     {place.category && (
@@ -163,27 +258,26 @@ const ItineraryDisplay = ({ itinerary, isHotelBased = false, hideSaveButton = fa
         itinerary.totalPlaces !== undefined) && (
         <div className="bg-gray-100 rounded-xl p-4 text-center font-semibold text-gray-700">
           Total Places Covered:{" "}
-          {itinerary.includedPlacesCount !== undefined
-            ? itinerary.includedPlacesCount
-            : itinerary.totalPlaces}
+          {localPlans.reduce((acc, day) => acc + (day.places ? day.places.length : 0), 0)}
         </div>
       )}
 
       {/* Save Button */}
-      {!hideSaveButton && (
+      {(!hideSaveButton || isEditing) && (
         <div className="flex flex-col items-center mt-8 space-y-3">
           {error && <p className="text-red-500 text-sm">{error}</p>}
           {saveSuccess ? (
-            <div className="bg-green-100 text-green-700 font-semibold px-6 py-3 rounded-xl">
-              ✓ Itinerary Saved Successfully!
+            <div className="bg-green-100 text-green-700 font-semibold px-6 py-3 rounded-xl flex items-center gap-2">
+              ✓ Itinerary {savedItineraryId ? 'Updated' : 'Saved'} Successfully!
             </div>
           ) : (
             <button
-              onClick={handleSaveItinerary}
+              onClick={handleSaveOrUpdateItinerary}
               disabled={saving}
-              className="bg-purple-600 text-white font-bold py-3 px-8 rounded-xl shadow hover:bg-purple-700 transition disabled:opacity-50"
+              className={`${isEditing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'} text-white font-bold py-3 px-8 rounded-xl shadow transition disabled:opacity-50 flex items-center gap-2`}
             >
-              {saving ? "Saving..." : "Save Itinerary"}
+              <Save size={20} />
+              {saving ? "Saving..." : isEditing ? "Save Changes" : "Save Itinerary"}
             </button>
           )}
         </div>

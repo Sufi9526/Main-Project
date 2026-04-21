@@ -150,6 +150,36 @@ router.get('/saved', async (req, res) => {
   }
 });
 
+// Update a saved itinerary
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { plans, totalPlaces } = req.body;
+
+    if (!plans) {
+      return res.status(400).json({ message: 'Plans data is required for update' });
+    }
+
+    const updatedItinerary = await Itinerary.findByIdAndUpdate(
+      id,
+      { plans, totalPlaces },
+      { new: true }
+    );
+
+    if (!updatedItinerary) {
+      return res.status(404).json({ message: 'Itinerary not found' });
+    }
+
+    res.json({
+      message: 'Itinerary updated successfully',
+      itinerary: updatedItinerary
+    });
+  } catch (error) {
+    console.error('Error updating itinerary:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Delete a saved itinerary
 router.delete('/:id', async (req, res) => {
   try {
